@@ -10,7 +10,12 @@ function enter(expression: string): CalculatorState {
 }
 
 function evaluate(expression: string): CalculatorState {
-  return reduce(enter(expression), { type: "evaluate", result: "1" });
+  const state = enter(expression);
+  return reduce(state, {
+    type: "evaluate",
+    expression: state.expression,
+    result: "1",
+  });
 }
 
 test("starts with an empty expression and no fake history", () => {
@@ -26,7 +31,11 @@ test("retains long numbers, fractional digits and trailing zeros as strings", ()
   for (const value of expression)
     state = reduce(state, { type: "insert", value });
   expect(state.expression).toBe(expression);
-  state = reduce(state, { type: "evaluate", result: "1" });
+  state = reduce(state, {
+    type: "evaluate",
+    expression: state.expression,
+    result: "1",
+  });
   expect(state.history[0].expression).toBe(expression);
   expect(state.history[0].result).toBeTypeOf("string");
 });
@@ -45,7 +54,11 @@ test("evaluating replaces the expression with the result and saves the original 
 
 test("promotes the exact string result without losing precision", () => {
   const result = "900719925474099312345678901234567890.00000000000100";
-  const state = reduce(enter("56+58"), { type: "evaluate", result });
+  const state = reduce(enter("56+58"), {
+    type: "evaluate",
+    expression: "56+58",
+    result,
+  });
   expect(state.expression).toBe(result);
   expect(state.history[0]).toEqual({ id: 1, expression: "56+58", result });
 });
@@ -55,7 +68,11 @@ test("a calculation can continue from the promoted result", () => {
   state = reduce(state, { type: "insert", value: "+" });
   state = reduce(state, { type: "insert", value: "2" });
   expect(state.expression).toBe("1+2");
-  state = reduce(state, { type: "evaluate", result: "1" });
+  state = reduce(state, {
+    type: "evaluate",
+    expression: state.expression,
+    result: "1",
+  });
   expect(state.expression).toBe("1");
   expect(state.history.map((item) => item.expression)).toEqual([
     "1+2",
@@ -71,12 +88,48 @@ test("backspace edits the promoted result, not the original expression", () => {
 });
 
 test("ignores empty submission and repeated equals", () => {
-  expect(reduce(initial, { type: "evaluate", result: "1" })).toBe(initial);
   expect(
-    reduce(enter("   "), { type: "evaluate", result: "1" }).history,
+    reduce(initial, { type: "evaluate", expression: "", result: "1" }),
+  ).toBe(initial);
+  expect(
+    reduce(enter("   "), { type: "evaluate", expression: "   ", result: "1" })
+      .history,
   ).toHaveLength(0);
   const state = evaluate("3+5");
-  expect(reduce(state, { type: "evaluate", result: "1" })).toBe(state);
+  expect(
+    reduce(state, {
+      type: "evaluate",
+      expression: state.expression,
+      result: "1",
+    }),
+  ).toBe(state);
+});
+
+test("ignores a response when the expression was edited, cleared or recalled while waiting", () => {
+  const pending = enter("2+3");
+  for (const state of [
+    reduce(pending, { type: "edit", expression: "4+5" }),
+    reduce(pending, { type: "clear" }),
+    reduce(pending, { type: "recall", expression: "6+7" }),
+  ]) {
+    expect(
+      reduce(state, { type: "evaluate", expression: "2+3", result: "5" }),
+    ).toBe(state);
+    expect(state.history).toEqual([]);
+  }
+});
+
+test("negative API results use display notation and can be continued or sign-toggled", () => {
+  const state = reduce(enter("2−7"), {
+    type: "evaluate",
+    expression: "2−7",
+    result: "-5",
+  });
+  expect(state.expression).toBe("−5");
+  expect(state.result).toBe("-5");
+  expect(state.history[0].result).toBe("-5");
+  expect(reduce(state, { type: "toggle-sign" }).expression).toBe("5");
+  expect(reduce(state, { type: "insert", value: "×" }).expression).toBe("−5×");
 });
 
 test("a digit starts a fresh expression after a result", () => {
@@ -149,7 +202,11 @@ test("history is newest first, bounded to 20, and separately clearable", () => {
   let state = initial;
   for (let index = 0; index < 25; index++) {
     state = reduce(state, { type: "edit", expression: `${index}+1` });
-    state = reduce(state, { type: "evaluate", result: "1" });
+    state = reduce(state, {
+      type: "evaluate",
+      expression: state.expression,
+      result: "1",
+    });
   }
   expect(state.history).toHaveLength(20);
   expect(state.history[0].expression).toBe("24+1");
@@ -163,7 +220,11 @@ test("history is newest first, bounded to 20, and separately clearable", () => {
 
 test("does not mutate previous state", () => {
   const before = enter("7+8");
-  const after = reduce(before, { type: "evaluate", result: "1" });
+  const after = reduce(before, {
+    type: "evaluate",
+    expression: before.expression,
+    result: "1",
+  });
   expect(after).not.toBe(before);
   expect(before.result).toBeNull();
   expect(before.history).toEqual([]);

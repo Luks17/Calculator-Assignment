@@ -1,28 +1,17 @@
 import { Keyboard } from "lucide-react";
-import { useEffect, useReducer, useRef, useState } from "react";
-import { calculate } from "../api/calculate";
-import {
-  calculatorReducer,
-  initialCalculatorState,
-} from "../model/calculator.reducer";
+import { useEffect, useRef, useState } from "react";
 import { keyboardAction } from "../model/keyboard";
+import { useCalculator } from "../model/useCalculator";
+import { CalculationErrorToast } from "./CalculationErrorToast";
 import { CalculationHistory } from "./CalculationHistory";
 import { CalculatorDisplay } from "./CalculatorDisplay";
 import { CalculatorKeypad } from "./CalculatorKeypad";
 
 export function Calculator() {
-  const [state, dispatch] = useReducer(
-    calculatorReducer,
-    initialCalculatorState,
-  );
+  const { state, dispatch, evaluate, isCalculating, error, dismissError } =
+    useCalculator();
   const [showHistory, setShowHistory] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  const evaluate = () => {
-    if (state.expression.trim() && state.result === null) {
-      dispatch({ type: "evaluate", result: calculate(state.expression) });
-    }
-  };
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -45,9 +34,7 @@ export function Calculator() {
         )
           return;
         event.preventDefault();
-        if (state.expression.trim() && state.result === null) {
-          dispatch({ type: "evaluate", result: calculate(state.expression) });
-        }
+        evaluate();
         return;
       }
 
@@ -66,7 +53,7 @@ export function Calculator() {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [state.expression, state.result]);
+  }, [evaluate, dispatch]);
 
   return (
     <div
@@ -84,8 +71,19 @@ export function Calculator() {
           showHistory={showHistory}
           onToggleHistory={() => setShowHistory((value) => !value)}
         />
-        <CalculatorKeypad onAction={dispatch} onCalculate={evaluate} />
+        <CalculatorKeypad
+          onAction={dispatch}
+          onCalculate={evaluate}
+          isCalculating={isCalculating}
+        />
       </section>
+
+      {error !== null && (
+        <CalculationErrorToast
+          message={error.message}
+          onDismiss={dismissError}
+        />
+      )}
 
       {showHistory && (
         <aside

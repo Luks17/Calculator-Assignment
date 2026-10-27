@@ -23,7 +23,7 @@ export function calculatorReducer(
         state.result === null
           ? state.expression
           : continuesResult
-            ? state.result
+            ? normalizeExpression(state.result)
             : "";
       return {
         ...state,
@@ -50,15 +50,22 @@ export function calculatorReducer(
     case "toggle-sign":
       return {
         ...state,
-        expression: toggleSign(state.result ?? state.expression),
+        expression: toggleSign(
+          normalizeExpression(state.result ?? state.expression),
+        ),
         result: null,
       };
     case "evaluate": {
       const expression = state.expression.trim();
-      if (!expression || state.result !== null) return state;
+      if (
+        !expression ||
+        state.result !== null ||
+        action.expression !== state.expression
+      )
+        return state;
       return {
         ...state,
-        expression: action.result,
+        expression: normalizeExpression(action.result),
         result: action.result,
         history: [
           { id: state.nextId, expression, result: action.result },

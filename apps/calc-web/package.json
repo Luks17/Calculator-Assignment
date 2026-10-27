@@ -16,6 +16,7 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.105.0",
     "lucide-react": "^1.61.0",
     "ofetch": "^1.5.1",
     "react": "^19.3.1",

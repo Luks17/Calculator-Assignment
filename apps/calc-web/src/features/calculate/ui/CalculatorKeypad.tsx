@@ -101,11 +101,13 @@ const keyAppearance = {
 type CalculatorKeypadProps = {
   onAction: (action: CalculatorAction) => void;
   onCalculate: () => void;
+  isCalculating: boolean;
 };
 
 export function CalculatorKeypad({
   onAction,
   onCalculate,
+  isCalculating,
 }: CalculatorKeypadProps) {
   return (
     <div
@@ -119,6 +121,8 @@ export function CalculatorKeypad({
           type="button"
           className={`btn btn-lg w-full rounded-xl px-0 text-2xl font-normal motion-reduce:transition-none lg:h-full lg:min-h-12 lg:text-3xl ${keyAppearance[key.kind ?? "number"]}`}
           aria-label={key.name}
+          aria-busy={key.action === "evaluate" && isCalculating}
+          disabled={key.action === "evaluate" && isCalculating}
           title={key.shortcut ? `${key.name} (${key.shortcut})` : key.name}
           onPointerDown={(event) => event.preventDefault()}
           onClick={() => {
@@ -128,7 +132,14 @@ export function CalculatorKeypad({
               onAction({ type: "insert", value: key.value });
           }}
         >
-          {key.label}
+          {key.action === "evaluate" && isCalculating ? (
+            <span
+              className="loading loading-spinner loading-sm"
+              aria-hidden="true"
+            />
+          ) : (
+            key.label
+          )}
         </button>
       ))}
     </div>

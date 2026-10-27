@@ -17,6 +17,6 @@ export type CalculatorAction =
   | { type: "backspace" }
   | { type: "clear" }
   | { type: "toggle-sign" }
-  | { type: "evaluate"; result: string }
+  | { type: "evaluate"; expression: string; result: string }
   | { type: "recall"; expression: string }
   | { type: "clear-history" };
