@@ -43,3 +43,4 @@ To use local tools instead, run Make in the app directory, for example
 - [Setup, local execution, configuration, and commands](docs/coding/development.md)
 - [API calls, arithmetic behavior, and errors](docs/calc-service/api.md)
 - [Backend notes](docs/calc-service/backend.md) · [Frontend notes](docs/calc-web/frontend.md)
+- [AI prompts used during development](docs/ai-prompts.md)
