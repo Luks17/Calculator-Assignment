@@ -29,6 +29,13 @@ services:
       start_period: 60s
     stop_grace_period: 10s
 
+  api-reference:
+    image: scalarapi/api-reference:latest
+    ports:
+      - "${API_REFERENCE_PORT:-8081}:8080"
+    volumes:
+      - ./contracts/calc/openapi:/docs:ro
+
   calc-web:
     image: sezzle-assignment-local-calc-web:0.1
     pull_policy: never
