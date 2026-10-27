@@ -1,0 +1,51 @@
+name: sezzle-assignment-local
+
+services:
+  calc-service:
+    image: sezzle-assignment-local-calc-service:0.1
+    pull_policy: never
+    build:
+      context: docker/dev/calc-service
+      args:
+        DEV_UID: ${DEV_UID:-1000}
+        DEV_GID: ${DEV_GID:-1000}
+    init: true
+    working_dir: /workspace/apps/calc-service
+    env_file:
+      - path: ./apps/calc-service/.env
+        required: false
+    ports:
+      - "${CALC_SERVICE_PORT:-8080}:8080"
+      - "${CALC_SERVICE_DEBUG_PORT:-2345}:2345"
+    volumes:
+      - .:/workspace
+      - go-modules:/go/pkg/mod
+      - go-build:/home/developer/.cache/go-build
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/healthz"]
+      interval: 5s
+      timeout: 2s
+      retries: 20
+      start_period: 60s
+    stop_grace_period: 10s
+
+  calc-web:
+    image: sezzle-assignment-local-calc-web:0.1
+    pull_policy: never
+    build:
+      context: .
+      dockerfile: docker/dev/calc-web/Dockerfile
+    init: true
+    env_file:
+      - path: ./apps/calc-web/.env
+        required: false
+    ports:
+      - "${CALC_WEB_PORT:-5173}:5173"
+    volumes:
+      - ./apps/calc-web:/workspace/apps/calc-web
+      - calc-web-node-modules:/workspace/apps/calc-web/node_modules
+
+volumes:
+  go-modules:
+  go-build:
+  calc-web-node-modules:
