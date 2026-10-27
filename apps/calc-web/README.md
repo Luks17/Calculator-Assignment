@@ -1,76 +1,59 @@
-# React + TypeScript + Vite
+# Calculator
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A responsive, GNOME-inspired calculator built with React, TypeScript, Vite,
+Tailwind CSS, daisyUI and Lucide icons. Uses daisyUI's built-in `light` and `dark` themes and
+component classes with Tailwind utilities, with no custom CSS rules or theme
+overrides. Includes persistent theme selection, keyboard input,
+editable expressions and up to 20 recent calculations for the current session.
 
-Currently, two official plugins are available:
+## Development
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Requires Node.js 24+ and pnpm 12.
 
-## React Compiler
-
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
-
-Note: This will impact Vite dev & build performances.
-You can also try [the experimental native React Compiler support in plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md#rust-react-compiler) by using `compiler: true` in the plugin options instead of using the Babel plugin.
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(["dist"]),
-  {
-    files: ["**/*.{ts,tsx}"],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
+```sh
+pnpm install
+pnpm dev
+pnpm test
+pnpm test:watch
+pnpm lint
+pnpm build
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+The repository's Docker workflow also supports `make test APP=calc-web`,
+`make build APP=calc-web` and `make lint APP=calc-web`.
 
-```js
-// eslint.config.js
-import reactX from "eslint-plugin-react-x";
-import reactDom from "eslint-plugin-react-dom";
+## Preview behavior
 
-export default defineConfig([
-  globalIgnores(["dist"]),
-  {
-    files: ["**/*.{ts,tsx}"],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs["recommended-typescript"],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
+**Every submitted expression returns the string `"1"`.** There is no network
+integration or client-side arithmetic evaluator. All operands, expressions and
+results remain strings, including long decimals and trailing zeros. The
+`features/calculate/api/calculate.ts` function is the mock boundary to replace
+when `POST /api/v1/calculations` is integrated. Backend expression syntax and
+transport types should be confirmed against the API contract at that point.
+
+Supported input: addition, subtraction, multiplication, division, exponentiation,
+square root, percentage, parentheses, decimal numbers and sign changes.
+
+Type directly into the expression field, use the on-screen keys, or use your
+keyboard. `Enter` or `=` submits, `Escape` clears, and `Backspace` deletes.
+The display shows a single expression. After calculation, the result replaces
+that expression; history retains the original expression and its result.
+`*` and `/` map to multiplication and division; `^` is exponentiation;
+`R` inserts a square root. Standard text editing shortcuts work in the input.
+History entries can be clicked to edit and reuse their expression. History is
+not persisted; the theme preference is the only value stored locally.
+
+## Structure
+
+```text
+src/
+  app/                  # Application composition and global themed styles
+  pages/calculator/     # Calculator page layout
+  features/calculate/   # Mock boundary, string-based model, keypad and history
+  shared/theme/         # Persistent theme switch
+  main.tsx
 ```
+
+Pages consume features through their public `index.ts` entry points. No unused
+entities, widgets, generated clients or backend infrastructure are introduced.
+Tests use Vitest. `pnpm test` runs the suite once; `pnpm test:watch` watches for changes.

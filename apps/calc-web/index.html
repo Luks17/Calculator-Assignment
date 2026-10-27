@@ -4,7 +4,25 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>calc-web</title>
+    <meta
+      name="description"
+      content="Calculator with arithmetic operations, calculation history, and light and dark themes."
+    />
+    <title>Calculator</title>
+    <script>
+      (() => {
+        let theme;
+        try {
+          theme = localStorage.getItem("calculator-theme");
+        } catch {}
+        document.documentElement.dataset.theme =
+          theme === "light" || theme === "dark"
+            ? theme
+            : matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light";
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
