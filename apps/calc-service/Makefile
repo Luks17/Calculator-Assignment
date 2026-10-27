@@ -16,7 +16,7 @@ env:
 	cp .env.example .env
 
 generate:
-	echo "Not implemented"
+	go tool ogen --config=ogen.yml --target=internal/transport/http/server/gen --clean ../../contracts/calc/openapi/schema.yml
 
 build:
 	go build ./...

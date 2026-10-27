@@ -1,0 +1,200 @@
+openapi: 3.1.0
+
+info:
+  title: Calculator API
+  version: 1.0.0
+  description: |
+    REST API for evaluating mathematical expressions with decimal precision.
+
+    Supported operations:
+    - Addition: +
+    - Subtraction: -
+    - Multiplication: *
+    - Division: /
+    - Exponentiation: ^ (integer exponents only)
+    - Square root: sqrt(expression)
+    - Percentage: % (postfix, divides by 100)
+
+    Expressions support parentheses and standard operator precedence.
+
+    Examples:
+    - 2 + 3 * 4 = 14
+    - (2 + 3) * 4 = 20
+    - sqrt(81) + 2 ^ 3 = 17
+    - 200 * 10% = 20
+    - 0.1 + 0.2 = 0.3
+
+    Percentage uses mathematical semantics:
+    200 + 10% = 200.1
+
+    Results are serialized as strings to preserve decimal precision.
+    Non-terminating results are rounded according to the server's
+    documented precision policy.
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+tags:
+  - name: Calculations
+    description: Mathematical expression evaluation
+
+paths:
+  /api/v1/calculations:
+    post:
+      tags:
+        - Calculations
+      operationId: calculate
+      summary: Evaluate a mathematical expression
+      description: |
+        Parses, validates, and evaluates a mathematical expression.
+
+        The server performs all arithmetic using decimal arithmetic
+        rather than binary floating-point numbers.
+
+        The endpoint is stateless and does not persist calculations.
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CalculationRequest"
+            examples:
+              basic:
+                summary: Basic arithmetic
+                value:
+                  expression: "10 + 5 * 2"
+              advanced:
+                summary: Advanced arithmetic
+                value:
+                  expression: "sqrt(81) + 2 ^ 3"
+              precision:
+                summary: Decimal precision
+                value:
+                  expression: "0.1 + 0.2"
+
+      responses:
+        "200":
+          description: Expression evaluated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CalculationResponse"
+              examples:
+                success:
+                  summary: Successful calculation
+                  value:
+                    result: "20"
+                precision:
+                  summary: Decimal calculation
+                  value:
+                    result: "0.3"
+
+        "400":
+          description: Invalid request body or request validation failure
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: INVALID_REQUEST
+                message: "Expression must not be empty"
+
+        "422":
+          description: Expression cannot be evaluated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                syntaxError:
+                  summary: Invalid expression
+                  value:
+                    code: INVALID_EXPRESSION
+                    message: "Unexpected token at position 5"
+                divisionByZero:
+                  summary: Division by zero
+                  value:
+                    code: DIVISION_BY_ZERO
+                    message: "Division by zero is not allowed"
+                invalidDomain:
+                  summary: Invalid mathematical domain
+                  value:
+                    code: INVALID_DOMAIN
+                    message: "Cannot calculate the square root of a negative number"
+
+        "500":
+          description: Unexpected server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: INTERNAL_ERROR
+                message: "An unexpected error occurred"
+
+components:
+  schemas:
+    CalculationRequest:
+      type: object
+      description: A mathematical expression to evaluate.
+      additionalProperties: false
+      required:
+        - expression
+      properties:
+        expression:
+          type: string
+          description: |
+            Mathematical expression using decimal numeric literals.
+
+            Supported operators: +, -, *, /, ^, %.
+            Square roots use sqrt(expression).
+            Exponents must be integers.
+            Percentage is a postfix operator equivalent to / 100.
+          minLength: 1
+          maxLength: 512
+          examples:
+            - "(10 + 5) * 2"
+            - "sqrt(144)"
+            - "250 * 15%"
+
+    CalculationResponse:
+      type: object
+      description: Successful calculation result.
+      additionalProperties: false
+      required:
+        - result
+      properties:
+        result:
+          type: string
+          description: |
+            Decimal result represented as a string to avoid
+            floating-point precision loss during JSON serialization.
+          examples:
+            - "30"
+            - "0.3"
+            - "3.3333333333333333"
+
+    ErrorResponse:
+      type: object
+      description: Structured API error response.
+      additionalProperties: false
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Machine-readable error code.
+          enum:
+            - INVALID_REQUEST
+            - INVALID_EXPRESSION
+            - DIVISION_BY_ZERO
+            - INVALID_DOMAIN
+            - INTERNAL_ERROR
+        message:
+          type: string
+          description: Human-readable error message.
+          examples:
+            - "Division by zero is not allowed"
