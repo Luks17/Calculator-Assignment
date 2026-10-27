@@ -50,6 +50,7 @@ services:
       - "${CALC_WEB_PORT:-5173}:5173"
     volumes:
       - ./apps/calc-web:/workspace/apps/calc-web
+      - ./contracts/calc/openapi:/workspace/contracts/calc/openapi:ro
       - calc-web-node-modules:/workspace/apps/calc-web/node_modules
 
 volumes:

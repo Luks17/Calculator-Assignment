@@ -22,6 +22,18 @@ pnpm build
 The repository's Docker workflow also supports `make test APP=calc-web`,
 `make build APP=calc-web` and `make lint APP=calc-web`.
 
+## HTTP client generation
+
+The shared contract at `../../contracts/calc/openapi/schema.yml` is the source
+for the Hey API ofetch client, calculation SDK and TypeScript types. Regenerate
+them with `pnpm generate` from this directory, or `make generate APP=calc-web`
+from the repository root using Docker.
+
+Generation is configured in `openapi-ts.config.ts`. Output is checked in under
+`src/shared/api/generated/` and formatted with Prettier. Do not edit generated
+files directly; regeneration replaces the directory. The client is not yet
+connected to the calculator UI; the mock behavior below is unchanged.
+
 ## Preview behavior
 
 **Every submitted expression returns the string `"1"`.** There is no network
@@ -50,10 +62,10 @@ src/
   app/                  # Application composition and global themed styles
   pages/calculator/     # Calculator page layout
   features/calculate/   # Mock boundary, string-based model, keypad and history
+  shared/api/generated/ # Hey API client, SDK and types from the shared contract
   shared/theme/         # Persistent theme switch
   main.tsx
 ```
 
-Pages consume features through their public `index.ts` entry points. No unused
-entities, widgets, generated clients or backend infrastructure are introduced.
+Pages consume features through their public `index.ts` entry points.
 Tests use Vitest. `pnpm test` runs the suite once; `pnpm test:watch` watches for changes.

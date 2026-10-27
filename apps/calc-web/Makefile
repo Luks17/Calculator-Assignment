@@ -4,7 +4,7 @@
 
 help:
 	@echo "env       Copy .env.example to .env (fails if it exists)"
-	@echo "generate  Not implemented; no code generation is configured"
+	@echo "generate  Regenerate the HTTP client from the shared OpenAPI contract"
 	@echo "build     Type-check and build the frontend for production"
 	@echo "test      Run calculator tests with Vitest"
 	@echo "lint      Lint frontend code with ESLint"
@@ -16,7 +16,7 @@ env:
 	cp .env.example .env
 
 generate:
-	@echo "Not implemented: no code generation is configured"
+	pnpm run generate
 
 build:
 	pnpm run build
